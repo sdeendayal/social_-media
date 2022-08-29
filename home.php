@@ -6,8 +6,14 @@ if (!isset($_SESSION['loggedin'])) {
 	header('Location: login.php');
 	exit;
 }
-
-
+$DATABASE_HOST = 'localhost';
+$DATABASE_USER = 'root';
+$DATABASE_PASS = '';
+$DATABASE_NAME = 'social_media';
+$con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+if (mysqli_connect_errno()) {
+	exit('Failed to connect to MySQL: ' . mysqli_connect_error());
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -33,8 +39,15 @@ if (!isset($_SESSION['loggedin'])) {
 			<h2>Home Page</h2>
 			<p>Welcome back, <?=$_SESSION['name']?>!</p>
 		</div>
-		<div class="content">			
-			<textarea class="form-control" cols="100" rows="5" id="textarea" onclick="javascript:if($(this).val() == 'textarea') {$(this).val() = '';} return false;"></textarea><br>
+		<div class="content">
+		<?php 					
+			$query = $con->prepare("SELECT * FROM `result` ORDER BY id DESC LIMIT 1");
+			$query->execute();
+	        $result = $query->get_result();
+	        while($row = $result->fetch_assoc()){ 
+		?>			
+			<textarea class="form-control" cols="100" rows="5" id="textarea"><?php echo $row['text']; ?></textarea><br>
+		<?php } ?>
 			<button class="btn btn-warning" id="onclick">Publish</button>
 		</div>
 		<br>
@@ -51,15 +64,7 @@ if (!isset($_SESSION['loggedin'])) {
 					</h3>
                    
 					<?php 
-					$DATABASE_HOST = 'localhost';
-					$DATABASE_USER = 'root';
-					$DATABASE_PASS = '';
-					$DATABASE_NAME = 'social_media';
-					$con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-					if (mysqli_connect_errno()) {
-						exit('Failed to connect to MySQL: ' . mysqli_connect_error());
-					}
-
+					
 					$query = $con->prepare("SELECT * FROM result ORDER BY id DESC");
 					$query->execute();
 			        $result = $query->get_result();
@@ -68,9 +73,10 @@ if (!isset($_SESSION['loggedin'])) {
 					<h3 class="post-title" style="    text-align: justify;">
 						<i class="fa fa-comments"></i>
 						<span> <?php echo $row['text']; ?></span>
-						<!-- <span> (<?php 
-						//$yrdata= strtotime($row['text']);
-                        //echo date('d-M-Y', $yrdata); ?>)</span> -->
+						 <span style="color: red;font-size: 11px;"> (<?php 
+						 	$date = new DateTime($row['date']);
+                            echo $date->format('j F, Y, g:i A');
+						?>)</span> 
 					</h3>
 					<hr>
 	                <?php } ?>
@@ -97,15 +103,10 @@ if(textarea != ""){
             
             if(dataResult == "Inserted")
             {
-                $("#show").show();
-                $('#show').html('');
-                $('#show').append('<i class="fa fa-comments"></i><a href="#" id="show1">'+ textarea +'</a><hr>');
-            	document.getElementById("textarea").value = "";
-            }
-			
-			
-			
-			
+                
+                $('#textarea').html('');
+                $('#textarea').append(textarea);            	
+            }				
 		}
 	});
 	}
